@@ -1,0 +1,16 @@
+# dsh-ask-router bundle patch: mounts the ask-user routing plugin under the
+# stable id `dsh-ask-router`. It takes the single ctx.userQuestions provider
+# slot and fans each ask out to every registered interaction surface that
+# claims the asking session (dsh-tui-pi panel, dsh-feishu card, …) — the
+# first answer wins, other surfaces dismiss automatically.
+#
+# IMPORTANT: list this bundle BEFORE UI bundles (dsh-tui-pi / dsh-feishu) so
+# it owns the provider slot first; UIs detect it via ctx.get('askSurfaces')
+# and register as surfaces instead of taking the slot themselves. Do NOT
+# install into a web profile — the upstream web apiproxy registers its own
+# provider without duplicate tolerance.
+
+- insert:
+    - id: dsh-ask-router
+      name: '@aiwayds/dsh-ask-router'
+      config: {}

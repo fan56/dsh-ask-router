@@ -23,7 +23,13 @@ agent 调 ask_user_question
 ask 请求带 `agent`（上游 `AskUserQuestionRequest`），surface 用
 `agent.session.id` 判定会话归属。
 
-## 安装（tui / headless profile）
+## 安装
+
+```bash
+npm install -D @aiwayds/dsh-ask-router   # 或作为 dsh-tui-pi 的依赖自动带上
+```
+
+本地开发用 link（tui / headless profile）：
 
 bundles 里放在**所有 UI 之前**（必须先占槽）；dependencies 用 `link:` 指向本仓库：
 

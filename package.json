@@ -1,6 +1,6 @@
 {
   "name": "@aiwayds/dsh-ask-router",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "dsh plugin: routes ask-user questions to every interaction surface bound to the asking session (TUI panel, Feishu card, web, ...) — first answer wins",
   "keywords": [
     "dsh",

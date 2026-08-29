@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { AskSurfaceRegistry, routeAsk } from '../lib/index.js'
+import { apply, AskSurfaceRegistry, routeAsk } from '../lib/index.js'
 
 function surface(name, { claim = () => true, answer, fail = false, settled } = {}) {
   const calls = { ask: 0, settled: [] }
@@ -95,4 +95,121 @@ test('AskSurfacesService: register/dispose/list keeps order', () => {
   assert.deepEqual(svc.list().map(s => s.name), ['a', 'b'])
   disposeA()
   assert.deepEqual(svc.list().map(s => s.name), ['b'])
+})
+
+// ------------------------------------------------ dual-era apply() --
+
+test('apply: rc-era host registers the slot provider and disposes via effect cleanup', () => {
+  let registered
+  let providerDisposed = 0
+  const ctx = {
+    provide(key, value) {
+      if (key === 'askSurfaces') this.surfaces = value
+    },
+    userQuestions: {
+      registerProvider(provider) {
+        registered = provider
+        return () => { providerDisposed += 1 }
+      },
+    },
+    logger: { warn() {} },
+    effect(callback) {
+      this.cleanup = callback()
+    },
+  }
+  apply(ctx)
+  assert.equal(typeof registered.ask, 'function')
+  assert.ok(ctx.surfaces instanceof AskSurfaceRegistry)
+  ctx.cleanup() // plugin scope ends → slot provider disposed
+  assert.equal(providerDisposed, 1)
+})
+
+test('apply: rc-era host — DUPLICATE_PROVIDER warns and yields instead of crashing', () => {
+  const warns = []
+  const ctx = {
+    provide() {},
+    userQuestions: {
+      registerProvider() {
+        const error = new Error('a user-questions provider is already registered')
+        error.name = 'UserQuestionError'
+        error.code = 'DUPLICATE_PROVIDER'
+        throw error
+      },
+    },
+    logger: { warn(message) { warns.push(message) } },
+    effect() {},
+  }
+  apply(ctx) // must not throw
+  assert.equal(warns.length, 1)
+})
+
+test('apply: alpha-era host (no provider slot) registers a waterfall answerer that delegates with zero surfaces', async () => {
+  let eventName
+  let listener
+  let disposed = 0
+  const ctx = {
+    provide(key, value) {
+      if (key === 'askSurfaces') this.surfaces = value
+    },
+    userQuestions: {}, // registerProvider does not exist on alpha-era hosts
+    logger: { warn() {} },
+    on(event, fn) {
+      eventName = event
+      listener = fn
+      return () => { disposed += 1 }
+    },
+    effect(callback) {
+      this.cleanup = callback()
+    },
+  }
+  apply(ctx)
+  assert.equal(eventName, 'user-questions/request')
+  assert.equal(typeof listener, 'function')
+  let nextCalls = 0
+  const answer = await listener({ questions: [] }, async () => {
+    nextCalls += 1
+    return { answers: [{ id: 'q1', selected: ['x'] }] }
+  })
+  assert.equal(nextCalls, 1, 'zero surfaces → delegate via next()')
+  assert.deepEqual(answer.answers[0].selected, ['x'])
+  ctx.cleanup() // plugin scope ends → listener disposed
+  assert.equal(disposed, 1)
+})
+
+test('apply: alpha-era host fans out to surfaces, first answer wins, loser settled, no delegation', async () => {
+  let listener
+  const ctx = {
+    provide(key, value) {
+      if (key === 'askSurfaces') this.surfaces = value
+    },
+    userQuestions: {},
+    logger: { warn() {} },
+    on(event, fn) {
+      listener = fn
+      return () => {}
+    },
+    effect() {},
+  }
+  apply(ctx)
+  let settledCalls = 0
+  ctx.surfaces.register({
+    name: 'fast',
+    claim: () => true,
+    ask: async () => ({ answers: [{ id: 'q1', selected: ['fast'] }] }),
+    settled: () => {},
+  })
+  ctx.surfaces.register({
+    name: 'slow',
+    claim: () => true,
+    ask: async () => ({ answers: [{ id: 'q1', selected: ['slow'] }] }),
+    settled: () => { settledCalls += 1 },
+  })
+  let nextCalls = 0
+  const answer = await listener({ questions: [] }, async () => {
+    nextCalls += 1
+    throw new Error('must not delegate when surfaces answer')
+  })
+  assert.deepEqual(answer.answers[0].selected, ['fast'], 'first completed answer wins')
+  assert.equal(settledCalls, 1, 'losing surface dismissed')
+  assert.equal(nextCalls, 0)
 })

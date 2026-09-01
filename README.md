@@ -4,7 +4,7 @@
 > 一次提问同时弹给**所有**认领该会话的交互面（TUI 面板 / 飞书卡片 / …），
 > **先答先得**，落选端自动收起。
 
-**Requires dsh >= 0.1.2-alpha.3** —— 本插件只面向 0.1.2-alpha 宿主线；rc 时代的 provider 槽位路径（含 DUPLICATE_PROVIDER 让位与加载顺序要求）已删除。
+**Requires dsh >= 0.1.2-alpha.4** —— 本插件只面向 0.1.2-alpha 宿主线；rc 时代的 provider 槽位路径（含 DUPLICATE_PROVIDER 让位与加载顺序要求）已删除。
 
 ## 为什么要做
 

@@ -97,53 +97,9 @@ test('AskSurfacesService: register/dispose/list keeps order', () => {
   assert.deepEqual(svc.list().map(s => s.name), ['b'])
 })
 
-// ------------------------------------------------ dual-era apply() --
+// ---------------------------------------------------- apply() wiring --
 
-test('apply: rc-era host registers the slot provider and disposes via effect cleanup', () => {
-  let registered
-  let providerDisposed = 0
-  const ctx = {
-    provide(key, value) {
-      if (key === 'askSurfaces') this.surfaces = value
-    },
-    userQuestions: {
-      registerProvider(provider) {
-        registered = provider
-        return () => { providerDisposed += 1 }
-      },
-    },
-    logger: { warn() {} },
-    effect(callback) {
-      this.cleanup = callback()
-    },
-  }
-  apply(ctx)
-  assert.equal(typeof registered.ask, 'function')
-  assert.ok(ctx.surfaces instanceof AskSurfaceRegistry)
-  ctx.cleanup() // plugin scope ends → slot provider disposed
-  assert.equal(providerDisposed, 1)
-})
-
-test('apply: rc-era host — DUPLICATE_PROVIDER warns and yields instead of crashing', () => {
-  const warns = []
-  const ctx = {
-    provide() {},
-    userQuestions: {
-      registerProvider() {
-        const error = new Error('a user-questions provider is already registered')
-        error.name = 'UserQuestionError'
-        error.code = 'DUPLICATE_PROVIDER'
-        throw error
-      },
-    },
-    logger: { warn(message) { warns.push(message) } },
-    effect() {},
-  }
-  apply(ctx) // must not throw
-  assert.equal(warns.length, 1)
-})
-
-test('apply: alpha-era host (no provider slot) registers a waterfall answerer that delegates with zero surfaces', async () => {
+test('apply: registers a waterfall answerer that delegates with zero surfaces', async () => {
   let eventName
   let listener
   let disposed = 0
@@ -151,7 +107,6 @@ test('apply: alpha-era host (no provider slot) registers a waterfall answerer th
     provide(key, value) {
       if (key === 'askSurfaces') this.surfaces = value
     },
-    userQuestions: {}, // registerProvider does not exist on alpha-era hosts
     logger: { warn() {} },
     on(event, fn) {
       eventName = event
@@ -176,13 +131,12 @@ test('apply: alpha-era host (no provider slot) registers a waterfall answerer th
   assert.equal(disposed, 1)
 })
 
-test('apply: alpha-era host fans out to surfaces, first answer wins, loser settled, no delegation', async () => {
+test('apply: fans out to surfaces, first answer wins, loser settled, no delegation', async () => {
   let listener
   const ctx = {
     provide(key, value) {
       if (key === 'askSurfaces') this.surfaces = value
     },
-    userQuestions: {},
     logger: { warn() {} },
     on(event, fn) {
       listener = fn

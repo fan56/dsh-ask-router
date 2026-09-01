@@ -1,32 +1,24 @@
 /**
  * dsh-ask-router — interaction routing for ask-user questions.
  *
- * Upstream has two ask-answerer eras, and this plugin speaks both:
+ * Targets the dsh 0.1.2-alpha host line only (the rc-era single-provider slot
+ * this plugin used to own is gone — alpha.3 removed `registerProvider` along
+ * with its DUPLICATE_PROVIDER protocol): answerers compose on the scoped
+ * 'user-questions/request' cordis waterfall, where a listener answers by
+ * returning a value and delegates by calling `next()`. This plugin registers
+ * as one waterfall answerer.
  *
- * - up to v0.1.1, `ctx.userQuestions` allowed exactly ONE provider per
- *   process, forcing an either/or between UIs loaded together. This plugin
- *   takes that single slot and multiplexes it;
- * - from v0.1.2-alpha, the slot is gone: answerers compose on the scoped
- *   'user-questions/request' cordis waterfall, where a listener answers by
- *   returning a value and delegates by calling `next()`. This plugin
- *   registers as one waterfall answerer with the same fan-out behavior.
- *
- * In both eras it provides `ctx.askSurfaces`, a registry where UIs register
- * as surfaces with a `claim(request)` predicate ("the asking session is
- * mine"); on ask it fans the question out to every claiming surface (when
- * nobody claims, to every registered surface — visible somewhere beats
- * failing), and the FIRST completed answer wins; every other surface gets
+ * The plugin provides `ctx.askSurfaces`, a registry where UIs register as
+ * surfaces with a `claim(request)` predicate ("the asking session is mine");
+ * on ask it fans the question out to every claiming surface (when nobody
+ * claims, to every registered surface — visible somewhere beats failing),
+ * and the FIRST completed answer wins; every other surface gets
  * `settled(request, winnerName)` so it can dismiss its UI; an aborted ask
  * rejects everywhere (surfaces also observe the request's own signal).
  *
- * Deployment is era-specific, see `apply`:
- * - rc-era host: load BEFORE the UI bundles (it must win the provider slot;
- *   a DUPLICATE_PROVIDER error means a native UI got there first and this
- *   router stays inert with a warning) — and never into a web profile, where
- *   the upstream web apiproxy owned the slot;
- * - alpha-era host: the "never install into a web profile" rule is obsolete
- *   — answerers coexist on the waterfall, so the router can even multiplex
- *   for a web profile; with zero surfaces it delegates via next().
+ * Coexistence is the point: UIs answer side by side on the waterfall, so the
+ * router can even multiplex for a web profile; with zero surfaces it
+ * delegates via next().
  */
 
 import { Context } from '@deepseek-ai/cordis'
@@ -139,21 +131,9 @@ export function routeAsk(surfaces: readonly AskSurface[], request: AskUserQuesti
   })
 }
 
-/** Whether a userQuestions error is the duplicate-slot shape. */
-function isDuplicateProviderError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false
-  if (error.name !== 'UserQuestionError') return false
-  return (error as { code?: string }).code === 'DUPLICATE_PROVIDER'
-}
-
 export const inject = ['userQuestions']
 
-/** The rc-era single-slot provider seam (`ctx.userQuestions` up to v0.1.1). */
-interface ProviderSlotSeam {
-  registerProvider(provider: { ask(request: AskUserQuestionRequest): Promise<AskUserQuestionAnswer> }): () => void
-}
-
-/** The alpha-era 'user-questions/request' cordis waterfall seam. */
+/** The 'user-questions/request' cordis waterfall seam. */
 interface UserQuestionsWaterfallSeam {
   on(
     event: 'user-questions/request',
@@ -168,24 +148,12 @@ export function apply(ctx: Context): void {
   const registry = new AskSurfaceRegistry()
   ctx.provide('askSurfaces', registry)
   const route = (request: AskUserQuestionRequest): Promise<AskUserQuestionAnswer> => routeAsk(registry.list(), request)
-  const providerSlot = ctx.userQuestions as unknown as ProviderSlotSeam
-  if (typeof providerSlot.registerProvider === 'function') {
-    // rc-era host: own the single provider slot (see the module doc).
-    try {
-      const dispose = providerSlot.registerProvider({ ask: route })
-      ctx.effect(() => () => dispose())
-    } catch (error) {
-      if (!isDuplicateProviderError(error)) throw error
-      // A native UI (or a mis-ordered bundle) owns the slot: surfaces stay
-      // registrable but questions route to the existing provider.
-      ctx.logger.warn('dsh-ask-router: provider slot already owned — load me before the UI bundles')
-    }
-    return
-  }
-  // alpha-era host: `registerProvider` does not exist, so the seam is typed
-  // structurally. Compose as one waterfall answerer: surfaces fan out as
-  // before; with zero surfaces, step aside so a co-present native answerer
-  // (e.g. the web UI) serves, or the request fails NO_PROVIDER upstream.
+  // Answerers compose on the Agent-scoped 'user-questions/request' cordis
+  // waterfall (dsh 0.1.2-alpha.3 removed the rc-era single-provider slot and
+  // its DUPLICATE_PROVIDER protocol): answer by returning, delegate with
+  // next(). Surfaces fan out as before; with zero surfaces, step aside so a
+  // co-present native answerer (e.g. the web UI) serves, or the request
+  // fails NO_PROVIDER upstream.
   const waterfall = ctx as unknown as UserQuestionsWaterfallSeam
   const dispose = waterfall.on('user-questions/request', (request, next) => {
     const surfaces = registry.list()

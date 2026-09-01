@@ -4,11 +4,14 @@
 > 一次提问同时弹给**所有**认领该会话的交互面（TUI 面板 / 飞书卡片 / …），
 > **先答先得**，落选端自动收起。
 
+**Requires dsh >= 0.1.2-alpha.3** —— 本插件只面向 0.1.2-alpha 宿主线；rc 时代的 provider 槽位路径（含 DUPLICATE_PROVIDER 让位与加载顺序要求）已删除。
+
 ## 为什么要做
 
 dsh 的 `ask_user_question`（AI 中途停下向用户提问）需要一个 UI 来渲染问题、收集答案。
-rc 时代的 dsh（≤ v0.1.1）规定**每进程只允许一个应答入口**（provider）——同一个 profile
-里装两个 UI（如 dsh-tui-pi + dsh-feishu），只有一个能收到提问，另一个永远沉默。
+rc 时代的 dsh（≤ v0.1.1）曾规定**每进程只允许一个应答入口**（provider）——同一个 profile
+里装两个 UI（如 dsh-tui-pi + dsh-feishu），只有一个能收到提问，另一个永远沉默
+（0.1.2-alpha 起官方改为 `'user-questions/request'` waterfall，多应答者共存，槽位已成历史）。
 
 而真实场景恰恰是：人在工位想在 TUI 里答，人离开座位想在手机飞书卡片上答。
 一个入口逼着二选一，意味着你一起身，AI 的提问就挂在那里等人。
@@ -24,7 +27,7 @@ rc 时代的 dsh（≤ v0.1.1）规定**每进程只允许一个应答入口**�
 
 ```
 agent 调 ask_user_question
-  → dsh-ask-router（rc：唯一 provider / alpha：waterfall 应答者）
+  → dsh-ask-router（waterfall 应答者）
       → claim(request) 过滤：只问「当前驱动该会话」的 surface
         （无人认领时问全部——宁可多弹不可漏问）
       → fan-out → 第一个答案胜出
@@ -71,7 +74,8 @@ npm install -D @aiwayds/dsh-ask-router   # 或作为 dsh-tui-pi 的依赖自动�
 
 本地开发用 link（tui / headless profile）：
 
-bundles 里放在**所有 UI 之前**（rc 宿主必须先占槽）；dependencies 用 `link:` 指向本仓库：
+dependencies 用 `link:` 指向本仓库；bundles 里放在 `dsh-base` 之后即可
+（alpha waterfall 上多应答者共存，无加载顺序要求）：
 
 ```jsonc
 {
@@ -84,9 +88,8 @@ bundles 里放在**所有 UI 之前**（rc 宿主必须先占槽）；dependenci
 }
 ```
 
-⚠️ **rc 宿主绝不装进 web profile**：上游 web apiproxy 自注册 provider 且
-不容忍重复注册，装了会挂掉 web UI。**alpha 宿主没有此限制**（waterfall
-多应答者共存）：装进 web profile 时，没有 surface 的请求会自动让位给
+装进 web profile 也是安全的（waterfall 多应答者共存；rc 时代「绝不装进
+web profile」的禁令随槽位一起成为历史）：没有 surface 的请求会自动让位给
 web UI 应答。
 
 ## Surface 协议（UI 插件实现）
@@ -100,15 +103,15 @@ ctx.get('askSurfaces').register({
 })
 ```
 
-- UI 检测不到本插件时应当独立可用：rc 宿主自占 provider 槽位，alpha 宿主自行注册 waterfall 应答者（零回归）
+- UI 检测不到本插件时应当独立可用：自行注册 `'user-questions/request'` waterfall 应答者（零回归）
 - `claim` 抛错按不认领处理；`settled` 抛错被吞（胜者不受影响）
 - 所有 surface 失败才 reject（取第一个错误）；无人认领时全体弹
 
 ## 测试
 
 ```bash
-npm test   # 12 个纯逻辑单测（先答先得/认领路由/abort/失败聚合/注册表
-           #  + apply() 双时代注册：rc 槽位 / alpha waterfall 应答）
+npm test   # 10 个纯逻辑单测（先答先得/认领路由/abort/失败聚合/注册表
+           #  + apply() waterfall 应答者注册与释放）
 ```
 
 License: MIT. 作者 fan56. 设计背景见

@@ -44,7 +44,10 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Install global dsh closure
-        run: npm install -g @deepseek-ai/dsh
+        # Track the rolling alpha line — npm `latest` still points at the rc
+        # line, so a bare install would gate the release against the wrong
+        # host closure (mirrors ci.yml).
+        run: npm install -g @deepseek-ai/dsh@alpha
 
       - name: Link dsh closure types
         run: node scripts/link-dsh-closure.mjs

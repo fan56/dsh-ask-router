@@ -4,14 +4,14 @@
 > 一次提问同时弹给**所有**认领该会话的交互面（TUI 面板 / 飞书卡片 / …），
 > **先答先得**，落选端自动收起。
 
-**Requires dsh >= 0.1.2-alpha.4** —— 本插件只面向 0.1.2-alpha 宿主线；rc 时代的 provider 槽位路径（含 DUPLICATE_PROVIDER 让位与加载顺序要求）已删除。
+**要求 dsh >= 0.1.2-rc.1** — 本插件只跟随 dsh RC/stable 线（CI 与发版在运行时解析 latest/next 中更新的 dist-tag）。**不再支持 alpha 线。** rc 时代的 provider 槽位路径（含 DUPLICATE_PROVIDER 让位与加载顺序要求）已删除。
 
 ## 为什么要做
 
 dsh 的 `ask_user_question`（AI 中途停下向用户提问）需要一个 UI 来渲染问题、收集答案。
 rc 时代的 dsh（≤ v0.1.1）曾规定**每进程只允许一个应答入口**（provider）——同一个 profile
 里装两个 UI（如 dsh-tui-pi + dsh-feishu），只有一个能收到提问，另一个永远沉默
-（0.1.2-alpha 起官方改为 `'user-questions/request'` waterfall，多应答者共存，槽位已成历史）。
+（0.1.2 起官方改为 `'user-questions/request'` waterfall，多应答者共存，槽位已成历史）。
 
 而真实场景恰恰是：人在工位想在 TUI 里答，人离开座位想在手机飞书卡片上答。
 一个入口逼着二选一，意味着你一起身，AI 的提问就挂在那里等人。
@@ -35,9 +35,9 @@ agent 调 ask_user_question
       → abort（turn 中止）全部撤销
 ```
 
-## v0.1.2-alpha 之后呢？—— 仍然需要，而且定位更清晰了
+## v0.1.2-rc 之后呢？—— 仍然需要，而且定位更清晰了
 
-alpha 时代的 dsh 移除了单入口：应答者可以共存于 `'user-questions/request'`
+rc/stable 线的 dsh 移除了单入口：应答者可以共存于 `'user-questions/request'`
 cordis waterfall 上（返回即应答、调 `next()` 即让位），**官方解决了「共存」**——
 只装单个 UI 的用户不再需要本插件，「绝不装进 web profile」的旧禁令也随之作废。
 
@@ -45,16 +45,16 @@ cordis waterfall 上（返回即应答、调 `next()` 即让位），**官方解
 后面的连问题都看不到；它表达不了「电脑和手机同时弹、人在哪边就在哪边答、
 另一边自动收起」。
 
-所以 alpha 时代本插件从「必需品」变成「增强件」：作为一层**多端竞答协议**
+所以在 rc/stable 线上本插件从「必需品」变成「增强件」：作为一层**多端竞答协议**
 叠在 waterfall 之上——
 
 ```
-alpha 宿主 waterfall 队列
+rc/stable 宿主 waterfall 队列
   └─ dsh-ask-router（占一个队列位，唯一的应答者）
        └─ 广播抢答：claim 过滤 → 全员同弹 → 先答先得 → settled 收摊
 ```
 
-rc 宿主要多端必须装它；alpha 宿主想要多端同时竞答也装它。单 UI 用户可以不装。
+rc/stable 宿主想要多端同时竞答就装它（alpha 宿主已不受支持）。单 UI 用户可以不装。
 
 ask 请求带 `agent`（上游 `AskUserQuestionRequest`），surface 用
 `agent.session.id` 判定会话归属。
@@ -75,7 +75,7 @@ npm install -D @aiwayds/dsh-ask-router   # 或作为 dsh-tui-pi 的依赖自动�
 本地开发用 link（tui / headless profile）：
 
 dependencies 用 `link:` 指向本仓库；bundles 里放在 `dsh-base` 之后即可
-（alpha waterfall 上多应答者共存，无加载顺序要求）：
+（waterfall 上多应答者共存，无加载顺序要求）：
 
 ```jsonc
 {

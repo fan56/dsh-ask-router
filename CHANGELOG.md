@@ -2,14 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.4.0] - 2026-09-03
 
 ### Changed
 - **BREAKING — dsh host floor `>= 0.1.2-alpha.3`, rc-line support dropped**: the rc-era provider-slot path is deleted — `ctx.userQuestions.registerProvider` ownership, the DUPLICATE_PROVIDER yield (`isDuplicateProviderError`), and the "load before the UI bundles" ordering requirement are all gone; the `'user-questions/request'` cordis waterfall answerer (return to answer, `next()` to delegate) is the single registration path
 - README rewritten accordingly: no slot, no load-order rule, and the rc-era "never install into a web profile" ban is history (waterfall answerers coexist)
+- CI/release rides the dsh RC/stable line: the host closure resolves at runtime to the newest of the `latest`/`next` dist-tags — the retired `@alpha` dist-tag is no longer followed (policy 2026-09-03)
+- dsh host floor re-declared as `>= 0.1.2-rc.1`; the alpha line is no longer a supported target
+- README declares RC/stable-only support (CI and releases resolve the newest `latest`/`next` dist-tag at runtime; the alpha line is no longer supported)
 
 ### Added
-- Boot smoke (`npm run smoke`, `scripts/smoke-boot.mjs`): mounts the packed plugin into a scratch dsh profile and boots it with the real dsh CLI; CI gates on it, installs the host from the rolling `@alpha` dist-tag (latest still points at the dropped rc line), and gains a daily schedule
+- Boot smoke (`npm run smoke`, `scripts/smoke-boot.mjs`): mounts the packed plugin into a scratch dsh profile and boots it with the real dsh CLI; CI gates on it, installs the host from the rolling rc/stable line (see Changed), and gains a daily schedule
 
 ## [0.2.0] - 2026-08-29
 

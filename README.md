@@ -92,6 +92,19 @@ dependencies 用 `link:` 指向本仓库；bundles 里放在 `dsh-base` 之后�
 web profile」的禁令随槽位一起成为历史）：没有 surface 的请求会自动让位给
 web UI 应答。
 
+## 卸载
+
+```bash
+dsh plugin --profile <name> remove @aiwayds/dsh-ask-router
+```
+
+宿主自动清掉 profile `bundles` 里对应的条目和插件的 patch 层。本插件
+**零落盘状态**——没有数据文件，也不占用 settings 命名空间——卸载后不留任何残留。
+
+移除后 `ask_user_question` 的 waterfall 自然回落给其它应答者：dsh-tui-pi 检测不到
+本插件时会以自身作为应答者接住提问；两者都没有时，`ask_user_question` 调用按失败
+收场（fail closed）。
+
 ## Surface 协议（UI 插件实现）
 
 ```ts

@@ -6,9 +6,7 @@
 #
 # IMPORTANT: list this bundle BEFORE UI bundles (dsh-tui-pi / dsh-feishu) so
 # it owns the provider slot first; UIs detect it via ctx.get('askSurfaces')
-# and register as surfaces instead of taking the slot themselves. Do NOT
-# install into a web profile — the upstream web apiproxy registers its own
-# provider without duplicate tolerance.
+# and register as surfaces instead of taking the slot themselves. Web-profile installs are safe (the upstream apiproxy gained duplicate tolerance later) — see the README.
 
 - insert:
     - id: dsh-ask-router

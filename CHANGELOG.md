@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2026-09-05
+
+### Changed
+- Clean-uninstall documentation + an uninstall leg in the boot smoke asserting removal reconciles the profile tree back to stock: a README 卸载 (Uninstall) section (`dsh plugin --profile <name> remove @aiwayds/dsh-ask-router` — the host splices the bundles entry and drops the patch layer; the plugin keeps zero on-disk state, so the ask_user_question waterfall falls through to other answerers, with dsh-tui-pi answering as itself and fail-closed when neither is present), and the stale cordis.patch.yml "Do NOT install into a web profile" comment corrected to match the README (the upstream web apiproxy gained duplicate tolerance after that comment was written)
+
 ## [0.4.0] - 2026-09-03
 
 ### Changed

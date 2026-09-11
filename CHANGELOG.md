@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2] - 2026-09-11
+
+### Changed
+- README declares the dsh support floor as `>= 0.1.5-rc.2` (docs-only — the package declares no `@deepseek-ai/*` dependencies, so the manifest and the shipped artifact are unchanged)
+- Release: the publish-verify loop polls `npm view` for ~2 min instead of 30s — packument propagation measured ~50s on dsh-dcp v0.11.0 outran the old window and falsely failed a landed publish
+
 ## [0.4.1] - 2026-09-05
 
 ### Changed

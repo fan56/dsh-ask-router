@@ -4,7 +4,7 @@
 > 一次提问同时弹给**所有**认领该会话的交互面（TUI 面板 / 飞书卡片 / …），
 > **先答先得**，落选端自动收起。
 
-**要求 dsh >= 0.1.5-rc.1** — 本插件只跟随 dsh RC/stable 线（CI 与发版在运行时解析 latest/next 中更新的 dist-tag）。**不再支持 alpha 线。** rc 时代的 provider 槽位路径（含 DUPLICATE_PROVIDER 让位与加载顺序要求）已删除。
+**要求 dsh >= 0.1.5-rc.2** — 本插件只跟随 dsh RC/stable 线（CI 与发版在运行时解析 latest/next 中更新的 dist-tag）。**不再支持 alpha 线。** rc 时代的 provider 槽位路径（含 DUPLICATE_PROVIDER 让位与加载顺序要求）已删除。
 
 ## 为什么要做
 

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "dsh-ask-router",
+    "description": "把 ask-user 提问路由到会话绑定的全部交互面（TUI 面板、飞书卡片、web…），先答先得。"
+  }
+}

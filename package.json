@@ -12,15 +12,21 @@
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "icon": "./icon.svg",
   "license": "MIT",
   "engines": {
     "node": ">=22.19.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh": ">=0.1.7-rc.1"
   },
   "files": [
     "lib",
     "scripts",
     "cordis.patch.yml",
-    "README.md"
+    "README.md",
+    "icon.svg",
+    "locale/*.json"
   ],
   "scripts": {
     "link-closure": "node scripts/link-dsh-closure.mjs",

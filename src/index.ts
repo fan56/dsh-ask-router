@@ -1,12 +1,9 @@
 /**
  * dsh-ask-router — interaction routing for ask-user questions.
  *
- * Targets the dsh 0.1.2-alpha host line only (the rc-era single-provider slot
- * this plugin used to own is gone — alpha.3 removed `registerProvider` along
- * with its DUPLICATE_PROVIDER protocol): answerers compose on the scoped
- * 'user-questions/request' cordis waterfall, where a listener answers by
- * returning a value and delegates by calling `next()`. This plugin registers
- * as one waterfall answerer.
+ * Answerers compose on the scoped 'user-questions/request' cordis waterfall,
+ * where a listener answers by returning a value and delegates by calling
+ * `next()`. This plugin registers as one waterfall answerer.
  *
  * The plugin provides `ctx.askSurfaces`, a registry where UIs register as
  * surfaces with a `claim(request)` predicate ("the asking session is mine");
@@ -149,11 +146,10 @@ export function apply(ctx: Context): void {
   ctx.provide('askSurfaces', registry)
   const route = (request: AskUserQuestionRequest): Promise<AskUserQuestionAnswer> => routeAsk(registry.list(), request)
   // Answerers compose on the Agent-scoped 'user-questions/request' cordis
-  // waterfall (dsh 0.1.2-alpha.3 removed the rc-era single-provider slot and
-  // its DUPLICATE_PROVIDER protocol): answer by returning, delegate with
-  // next(). Surfaces fan out as before; with zero surfaces, step aside so a
-  // co-present native answerer (e.g. the web UI) serves, or the request
-  // fails NO_PROVIDER upstream.
+  // waterfall: answer by returning, delegate with next(). Surfaces fan out
+  // as before; with zero surfaces, step aside so a co-present native
+  // answerer (e.g. the web UI) serves, or the request fails NO_PROVIDER
+  // upstream.
   const waterfall = ctx as unknown as UserQuestionsWaterfallSeam
   const dispose = waterfall.on('user-questions/request', (request, next) => {
     const surfaces = registry.list()

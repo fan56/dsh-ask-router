@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- dsh host floor raised to `>= 0.1.7-rc.1` and declared for the first time as a real `peerDependencies` entry (`"@deepseek-ai/dsh": ">=0.1.7-rc.1"`) — from 0.1.7 the official plugin compatibility precheck reads peerDependencies semver; undeclared plugins are waved through as compatible, declared ones get checked
+- Verified against the 0.1.7-rc.1 host closure (scratch prefix install linked in via `DSH_CLOSURE_DIR`): `tsc --noEmit` clean and the full unit suite green — no source-level breakage; the `dsh-user-questions` exports this plugin imports (`AskUserQuestionAnswer`, `AskUserQuestionRequest`, `UserQuestionError`) all still exist in 0.1.7-rc.1
+- src/index.ts: rc-era provider-slot history notes dropped from the header comment (docs-only)
+- **Plugin Manager metadata.** Added `icon.svg` and `locale/{en,zh}.json` (`meta.title`/`meta.description` per the official `readPluginMeta` contract); `package.json` now declares the `icon` and ships both in the tarball.
+
 ## [0.4.2] - 2026-09-11
 
 ### Changed

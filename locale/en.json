@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "dsh-ask-router",
+    "description": "Routes ask-user questions to every surface bound to the asking session (TUI panel, Feishu card, web...) — first answer wins."
+  }
+}

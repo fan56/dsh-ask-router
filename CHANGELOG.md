@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- **0.2.1-rc.2 wave**: CI closure tower restored to newest-of(latest,next) with a prerelease-aware compare (the 10-17 pin-to-latest hunk is undone); zero code changes — peer floor `>=0.2.0-rc.2` unchanged (pre-flight `includePrerelease` already matches 0.2.1-rc.2); typecheck clean, 10/0 tests, boot smoke pass against a 0.2.1-rc.2 host closure.
 - **Raise dsh host floor to 0.2.0-rc.2**（umbrella peer `@deepseek-ai/dsh >= 0.2.0-rc.2`；README 同步）。devDeps 保持零 `@deepseek-ai` 钉：类型经 npm peer 自动安装的伞包（rc.2）+ `link-dsh-closure` 指向全局 0.2.0-rc.2 闭包双轨解析。零源码改动——waterfall 面编译安全，`AskUserQuestionRequestEvent` 的新增可选 `wait` 字段纯增量不触及（timed ask 接线属可选跟进，不在本波）。
 - dsh host floor raised to `>= 0.1.7-rc.1` and declared for the first time as a real `peerDependencies` entry (`"@deepseek-ai/dsh": ">=0.1.7-rc.1"`) — from 0.1.7 the official plugin compatibility precheck reads peerDependencies semver; undeclared plugins are waved through as compatible, declared ones get checked
 - Verified against the 0.1.7-rc.1 host closure (scratch prefix install linked in via `DSH_CLOSURE_DIR`): `tsc --noEmit` clean and the full unit suite green — no source-level breakage; the `dsh-user-questions` exports this plugin imports (`AskUserQuestionAnswer`, `AskUserQuestionRequest`, `UserQuestionError`) all still exist in 0.1.7-rc.1

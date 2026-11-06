@@ -2,12 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.6.1 (2026-10-26)
-
-### Fixed
-- Every `@deepseek-ai` peer is now optional (`peerDependenciesMeta.optional: true`) — npm-class profile installs auto-resolve hard peers from the stable tower, and those exact-pinned copies shadow the host closure so the host pre-flight gate disables the plugin rows (the 10-26 cron 0.6.0 failure class, first seen 10-19). Surfaced by the new peer-meta audit in fan56/dsh-subagent-registry's weekly `e2e install`. No code change.
-
-## [Unreleased]
+## 0.7.0 (2026-11-06)
 
 ### Changed
 - **0.2.2-rc.1 wave**: zero code changes — the plugin declares no `@deepseek-ai/*` dev pins, CI's host closure install already resolves newest-of(latest,next) with a prerelease-aware compare (it adopts 0.2.2-rc.1 on its next run), and the peer floor `>=0.2.0-rc.2` is unchanged (pre-flight `includePrerelease` already matches 0.2.2-rc.1). Verified against a real 0.2.2-rc.1 host closure (scratch `dsh@0.2.2-rc.1` install, cordis 4.1.0 / schemastery 3.19.0): typecheck clean, 10/0 tests, boot smoke pass. Also regenerated `package-lock.json` against registry.npmjs.org — the committed lock still captured the old hard-peer tower; with every peer optional the fresh install collapses it to the real dependency graph.
@@ -18,6 +13,11 @@ All notable changes to this project will be documented in this file.
 - Verified against the 0.1.7-rc.1 host closure (scratch prefix install linked in via `DSH_CLOSURE_DIR`): `tsc --noEmit` clean and the full unit suite green — no source-level breakage; the `dsh-user-questions` exports this plugin imports (`AskUserQuestionAnswer`, `AskUserQuestionRequest`, `UserQuestionError`) all still exist in 0.1.7-rc.1
 - src/index.ts: rc-era provider-slot history notes dropped from the header comment (docs-only)
 - **Plugin Manager metadata.** Added `icon.svg` and `locale/{en,zh}.json` (`meta.title`/`meta.description` per the official `readPluginMeta` contract); `package.json` now declares the `icon` and ships both in the tarball.
+
+## 0.6.1 (2026-10-26)
+
+### Fixed
+- Every `@deepseek-ai` peer is now optional (`peerDependenciesMeta.optional: true`) — npm-class profile installs auto-resolve hard peers from the stable tower, and those exact-pinned copies shadow the host closure so the host pre-flight gate disables the plugin rows (the 10-26 cron 0.6.0 failure class, first seen 10-19). Surfaced by the new peer-meta audit in fan56/dsh-subagent-registry's weekly `e2e install`. No code change.
 
 ## [0.4.2] - 2026-09-11
 

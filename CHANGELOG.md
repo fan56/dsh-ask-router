@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Changed
+- **0.2.2-rc.2 wave**: the dev pin `@deepseek-ai/dsh-user-questions` rides the host closure from `0.2.2-rc.1` to `0.2.2-rc.2`; the umbrella peer floor `>=0.2.0-rc.2` is unchanged (pre-flight `includePrerelease` already matches 0.2.2-rc.2), and ci.yml / release.yml need no edits — both already resolve the host closure as newest-of(latest,next) with a prerelease-aware node compare, so they adopt `dsh@0.2.2-rc.2` (the `next` dist-tag) on their next run. Added a repo `.npmrc` with `legacy-peer-deps=true` / `auto-install-peers=false` (the dsh-llm-proxy precedent): the rc.2 closure ships exact cross-package peer pins that npm's modern resolver cannot reconcile against the previous wave in the tree. `package-lock.json` regenerated against registry.npmjs.org — with peers no longer auto-installed, the stale rc.1 peer tower collapses (package-lock entries 21 → 10). Typecheck clean, 10/0 tests, boot smoke pass.
+
 ## 0.7.0 (2026-11-06)
 
 ### Changed

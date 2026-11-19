@@ -99,18 +99,20 @@ test('AskSurfacesService: register/dispose/list keeps order', () => {
 
 // ---------------------------------------------------- apply() wiring --
 
-test('apply: registers a waterfall answerer that delegates with zero surfaces', async () => {
+test('apply: registers a prepended waterfall answerer that delegates with zero surfaces', async () => {
   let eventName
   let listener
+  let options
   let disposed = 0
   const ctx = {
     provide(key, value) {
       if (key === 'askSurfaces') this.surfaces = value
     },
     logger: { warn() {} },
-    on(event, fn) {
+    on(event, fn, opts) {
       eventName = event
       listener = fn
+      options = opts
       return () => { disposed += 1 }
     },
     effect(callback) {
@@ -120,6 +122,7 @@ test('apply: registers a waterfall answerer that delegates with zero surfaces', 
   apply(ctx)
   assert.equal(eventName, 'user-questions/request')
   assert.equal(typeof listener, 'function')
+  assert.deepEqual(options, { prepend: true }, 'registered ahead of the host bridge; no global option')
   let nextCalls = 0
   const answer = await listener({ questions: [] }, async () => {
     nextCalls += 1
@@ -131,7 +134,7 @@ test('apply: registers a waterfall answerer that delegates with zero surfaces', 
   assert.equal(disposed, 1)
 })
 
-test('apply: fans out to surfaces, first answer wins, loser settled, no delegation', async () => {
+test('apply: surfaces race downstream, first answer wins, loser settled, downstream late result swallowed', async () => {
   let listener
   const ctx = {
     provide(key, value) {
@@ -159,11 +162,14 @@ test('apply: fans out to surfaces, first answer wins, loser settled, no delegati
     settled: () => { settledCalls += 1 },
   })
   let nextCalls = 0
-  const answer = await listener({ questions: [] }, async () => {
+  let releaseDownstream
+  const answer = await listener({ questions: [] }, () => {
     nextCalls += 1
-    throw new Error('must not delegate when surfaces answer')
+    return new Promise((resolve) => { releaseDownstream = () => resolve({ answers: [{ id: 'q1', selected: ['downstream'] }] }) })
   })
-  assert.deepEqual(answer.answers[0].selected, ['fast'], 'first completed answer wins')
+  assert.deepEqual(answer.answers[0].selected, ['fast'], 'surface beats the pending downstream answer')
   assert.equal(settledCalls, 1, 'losing surface dismissed')
-  assert.equal(nextCalls, 0)
+  assert.equal(nextCalls, 1, 'downstream is delegated to exactly once for the race')
+  releaseDownstream() // late downstream result must be swallowed, not rethrow
+  await new Promise((r) => setImmediate(r))
 })

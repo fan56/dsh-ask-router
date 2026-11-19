@@ -2,12 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 0.8.0 (2026-11-19)
+
+### Fixed
+- **Prepend the waterfall answerer ahead of the host client bridge.** On dsh 0.2.2-rc.x the GUI client bridge claims and consumes `user-questions/request` without calling `next()`, so a tail-registered router never sees the ask. Registering with `{ prepend: true }` (leaving `global` off to preserve the existing scope filtering) puts the router ahead of that bridge on GUI-opened sessions (fan56/dsh-feishu#7).
 
 ### Added
+- **Race arbiter (`raceAsk`).** The surface fan-out and the downstream `next()` now start in the same tick: the first terminal answer wins and `next()` is issued exactly once. A downstream win settles every surface and returns its answer; a late surface answer or rejection is swallowed. Added `test/race.test.mjs` (11 cases: both win paths, double-reject classification with signal-abort precedence, sync-throw normalization, prepend sanity, and a real-cordis consuming-bridge simulation).
 - **npm packaged upgrade regression test.** `test/packaged-upgrade.test.mjs` installs the published 0.7.0 baseline in a scratch consumer, packs the repo, then upgrades that consumer to the tarball and asserts the package carries no `preinstall`/`install`/`postinstall` hook, still ships its bundle patch and entry, and leaves the consumer tree untouched — the pnpm 11 `strictDepBuilds` / `ERR_PNPM_IGNORED_BUILDS` class (see dsh-subagent-registry#10). No product change. The existing `node --test test/*.test.mjs` glob already picks the file up.
 
 ### Changed
+- **settled() fires at most once per surface, per race.** A race-scoped `settledOnceDispatcher` is shared by the downstream mass-dismiss and `routeAsk`'s loser dismissal, so a zombie surface answer arriving after a downstream win cannot re-settle a surface already dismissed. `routeAsk` takes an optional settle dispatcher (default `safeSettled`).
 - **0.2.2-rc.2 wave**: the dev pin `@deepseek-ai/dsh-user-questions` rides the host closure from `0.2.2-rc.1` to `0.2.2-rc.2`; the umbrella peer floor `>=0.2.0-rc.2` is unchanged (pre-flight `includePrerelease` already matches 0.2.2-rc.2), and ci.yml / release.yml need no edits — both already resolve the host closure as newest-of(latest,next) with a prerelease-aware node compare, so they adopt `dsh@0.2.2-rc.2` (the `next` dist-tag) on their next run. Added a repo `.npmrc` with `legacy-peer-deps=true` / `auto-install-peers=false` (the dsh-llm-proxy precedent): the rc.2 closure ships exact cross-package peer pins that npm's modern resolver cannot reconcile against the previous wave in the tree. `package-lock.json` regenerated against registry.npmjs.org — with peers no longer auto-installed, the stale rc.1 peer tower collapses (package-lock entries 21 → 10). Typecheck clean, 10/0 tests, boot smoke pass.
 
 ## 0.7.0 (2026-11-06)
